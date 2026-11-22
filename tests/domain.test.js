@@ -131,3 +131,11 @@ test('payload QR', () => {
   assert.deepEqual(d, { ...p, pao: '' });
   assert.deepEqual(decodePayload('XYZ-LOTTO-FORNITORE'), { raw: 'XYZ-LOTTO-FORNITORE' });
 });
+
+test('versione app allineata con la cache del service worker', async () => {
+  const { APP_VERSION } = await import('../js/version.js');
+  const fs = await import('node:fs');
+  const sw = fs.readFileSync(new URL('../sw-shell.js', import.meta.url), 'utf8');
+  assert.match(sw, new RegExp(`const VERSION = 'esz-v${APP_VERSION.replace(/\./g, '\\.')}'`));
+  assert.match(sw, /'js\/version\.js'/);
+});

@@ -51,6 +51,7 @@ hr { border: 0; border-top: 1px solid var(--border); margin: 1rem 0; }
 .sidebar { position: fixed; top: var(--top); bottom: 0; left: 0; width: var(--sidebar); overflow-y: auto; background: var(--surface); border-right: 1px solid var(--border); padding: .5rem; z-index: 25; }
 .sidebar a { display: flex; align-items: center; gap: .6rem; padding: .55rem .7rem; border-radius: 8px; color: var(--text); text-decoration: none; }
 .sidebar a:hover { background: var(--surface-2); }
+.sidebar a.version { display: block; margin-top: 1rem; font-size: .75rem; color: var(--muted); padding: .4rem .7rem; }
 .sidebar a.active { background: var(--primary-soft); color: var(--primary); font-weight: 600; }
 .sidebar .sep { font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: .9rem .7rem .3rem; }
 .sidebar .ico { width: 1.4em; text-align: center; }

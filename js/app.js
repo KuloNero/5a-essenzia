@@ -2,6 +2,7 @@ import { Store, loadConfig, saveConfig } from './store.js';
 import { $, $$, html, raw, toast, modalOpen, openModal } from './ui.js';
 import { fmtDateTime } from './util.js';
 import { describeAction } from './actions.js';
+import { versionLabel } from './version.js';
 import { renderSetup } from './views/settings.js';
 import { routes } from './views/index.js';
 
@@ -101,7 +102,8 @@ function showBanner() {
 function renderNav() {
   $('#sidebar').innerHTML = NAV.map(n => n[0] === 'sep'
     ? `<div class="sep">${n[1]}</div>`
-    : `<a href="${n[0]}"><span class="ico">${n[1]}</span><span>${n[2]}</span></a>`).join('');
+    : `<a href="${n[0]}"><span class="ico">${n[1]}</span><span>${n[2]}</span></a>`).join('')
+    + `<a href="#/settings" class="version" title="Versione dell'app">${versionLabel()}</a>`;
   $('#bottombar').innerHTML = BOTTOM.map(([h, i, l, c]) => `<a href="${h}" class="${c || ''}"><span class="ico">${i}</span><span>${l}</span></a>`).join('');
   $('#bottombar a[href="#menu"]').addEventListener('click', e => { e.preventDefault(); document.body.classList.toggle('nav-open'); });
   $('#menuBtn').addEventListener('click', () => document.body.classList.toggle('nav-open'));
@@ -126,7 +128,8 @@ function syncDetails() {
         <dt>Archivio</dt><dd>${s.backend.kind === 'github' ? `GitHub ${s.config.owner}/${s.config.repo} (${s.config.branch})` : 'Solo questo dispositivo (locale)'}</dd>
         <dt>Stato</dt><dd>${s.status}${s.lastError ? ' — ' + s.lastError.message : ''}</dd>
         <dt>Ultima sync</dt><dd>${s.lastSync ? fmtDateTime(s.lastSync) : '—'}</dd>
-        <dt>Commit</dt><dd class="mono">${(s.head || '').slice(0, 10)}</dd>
+        <dt>Commit dati</dt><dd class="mono">${(s.head || '').slice(0, 10)}</dd>
+        <dt>App</dt><dd>${versionLabel({ long: true })}</dd>
         <dt>In coda offline</dt><dd>${s.pending.length}</dd>
       </dl>
       ${s.pending.length ? html`<h3>Operazioni in attesa</h3><ul>${s.pending.map(a => html`<li>${describeAction(a, s.db)} — ${fmtDateTime(a.meta.ts)}</li>`)}</ul>` : ''}
@@ -201,6 +204,24 @@ async function setupPeriodicSync() {
     const st = await navigator.permissions.query({ name: 'periodic-background-sync' });
     if (st.state === 'granted') await reg.periodicSync.register('esz-periodic', { minInterval: 60 * 60 * 1000 });
   } catch { /* opzionale */ }
+}
+
+// Nuova versione pubblicata: il nuovo service worker prende il controllo → proponi di ricaricare
+if ('serviceWorker' in navigator) {
+  const hadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController) return; // prima installazione
+    const b = $('#banner');
+    b.innerHTML = String(html`<span>Nuova versione dell'app disponibile</span><button class="btn btn-sm btn-primary">Aggiorna</button>`);
+    b.hidden = false;
+    b.querySelector('button').onclick = () => {
+      if (app.dirty && !confirm('Ci sono modifiche non salvate in questa pagina. Ricaricare comunque?')) return;
+      location.reload();
+    };
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') navigator.serviceWorker.getRegistration().then(r => r?.update()).catch(() => {});
+  });
 }
 
 if ('serviceWorker' in navigator) {

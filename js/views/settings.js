@@ -7,6 +7,7 @@ import { utf8ToB64, b64ToUtf8, num } from '../util.js';
 import { kv } from '../idb.js';
 import { pageHead } from './common.js';
 import { loadDemo } from '../demo.js';
+import { versionLabel } from '../version.js';
 
 const CFG_PREFIX = 'ESZCFG1|';
 const guessDevice = () => /iphone|android|mobile/i.test(navigator.userAgent) ? 'smartphone' : 'pc';
@@ -121,8 +122,14 @@ export function settings(el, { app }) {
       </div>
       <div class="toolbar"><button class="btn btn-primary">Salva impostazioni</button></div>
     </form>
-    <div class="card"><h2>Informazioni</h2><p class="muted small">5a Essenzia · PWA installabile (menu del browser → "Installa app" / "Aggiungi a schermata Home"). La fotocamera richiede HTTPS. Supporto conformità: Reg. (CE) 1223/2009, GMP ISO 22716 — il software è uno strumento di supporto e non sostituisce la valutazione della sicurezza.</p></div>`);
+    <div class="card"><h2>Informazioni</h2><p><b>5a Essenzia ${versionLabel({ long: true })}</b> <button class="btn btn-sm" id="upd">Cerca aggiornamenti</button></p><p class="muted small"> PWA installabile (menu del browser → "Installa app" / "Aggiungi a schermata Home"). La fotocamera richiede HTTPS. Supporto conformità: Reg. (CE) 1223/2009, GMP ISO 22716 — il software è uno strumento di supporto e non sostituisce la valutazione della sicurezza.</p></div>`);
 
+  $('#upd', el).onclick = async () => {
+    const reg = await navigator.serviceWorker?.getRegistration();
+    if (!reg) return toast('Aggiornamento automatico non disponibile in questo browser', 'warn');
+    await reg.update().catch(() => {});
+    toast(reg.installing || reg.waiting ? 'Nuova versione in arrivo…' : 'Stai usando la versione più recente', 'ok');
+  };
   $('#dev', el).addEventListener('submit', e => {
     e.preventDefault();
     const d = readForm(e.target);

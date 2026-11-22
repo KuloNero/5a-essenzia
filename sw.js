@@ -1,5 +1,6 @@
 // Service worker principale (module): app shell offline + sincronizzazione in background.
 // Se il browser non supporta i service worker "module", l'app registra sw-classic.js (solo shell).
+// build: __BUILD__
 import './sw-shell.js';
 import { backgroundSync } from './js/bgsync.js';
 

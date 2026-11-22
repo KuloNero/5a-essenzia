@@ -36,6 +36,12 @@ jobs:
         run: |
           mkdir _site
           cp -r index.html manifest.webmanifest sw.js sw-shell.js sw-classic.js css js vendor icons _site/
+          BUILD="${GITHUB_SHA::7}"
+          DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          sed -i "s/__BUILD_DATE__/$DATE/; s/__BUILD__/$BUILD/" _site/js/version.js
+          # nuova cache e service worker diverso a ogni pubblicazione → aggiornamento rilevato dai dispositivi
+          sed -i "s/const VERSION = 'esz-v\([0-9.]*\)';/const VERSION = 'esz-v\1-$BUILD';/" _site/sw-shell.js
+          sed -i "s/__BUILD__/$BUILD/" _site/sw.js
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
