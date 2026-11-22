@@ -1,0 +1,22 @@
+{
+  "name": "5a Essenzia – Gestionale cosmetica naturale",
+  "short_name": "Essenzia",
+  "description": "Formulazione, lotti, magazzino QR, tracciabilità e vendite per laboratori di cosmetica naturale.",
+  "start_url": "./#/",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f5f6f2",
+  "theme_color": "#2f6b4f",
+  "lang": "it",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ],
+  "shortcuts": [
+    { "name": "Scansiona QR", "url": "./#/scan" },
+    { "name": "Carico merce", "url": "./#/receive" }
+  ]
+}

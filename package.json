@@ -1,0 +1,11 @@
+{
+  "name": "5a-essenzia",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Gestionale PWA per laboratorio di cosmetica naturale (dati su GitHub)",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "serve": "python3 -m http.server 8080"
+  }
+}
