@@ -1,9 +1,8 @@
-import { html, raw, table, field, input, select, $, $$, toast, bindSearch, confirmDialog, readForm } from '../ui.js';
+import { html, raw, table, field, input, select, $, $$, toast, bindSearch, confirmDialog, readForm, openPdf } from '../ui.js';
 import { byId, recipeTotalPct, inciList, recipeCost, priceAnalysis, scaleRecipe, recipeItems, materialStock } from '../domain.js';
 import { fmtQty, fmtEur, fmtNum, num, round, uid, clone, sortBy, esc, fmtDate } from '../util.js';
 import { pageHead, materialOptions, docsSection, bindDocs } from './common.js';
 import { productLabelPdf } from '../pdf.js';
-import { openPdf } from '../ui.js';
 
 export function recipes(el, { app }) {
   const db = app.db;

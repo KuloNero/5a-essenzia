@@ -1,6 +1,6 @@
 import { html, raw, table, select, $, $$, toast, bindSearch, openPdf } from '../ui.js';
 import { byId } from '../domain.js';
-import { fmtDate, fmtQty, sortBy } from '../util.js';
+import { fmtDate, sortBy } from '../util.js';
 import { labelsPdf } from '../pdf.js';
 import { pageHead, lotLabelItem, batchLabelItem, matName, lotBadge, batchBadge } from './common.js';
 

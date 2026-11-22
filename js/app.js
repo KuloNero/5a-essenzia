@@ -1,5 +1,5 @@
 import { Store, loadConfig, saveConfig } from './store.js';
-import { $, $$, html, raw, toast, modalOpen, openModal } from './ui.js';
+import { $, $$, html, toast, modalOpen, openModal } from './ui.js';
 import { fmtDateTime } from './util.js';
 import { describeAction } from './actions.js';
 import { versionLabel } from './version.js';
@@ -183,11 +183,11 @@ async function boot() {
 }
 
 // Service worker: "module" (con sync in background) e fallback classico per i browser che non lo supportano
-const swReady = ('serviceWorker' in navigator && location.protocol !== 'file:')
-  ? navigator.serviceWorker.register('sw.js', { type: 'module' })
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  navigator.serviceWorker.register('sw.js', { type: 'module' })
     .catch(() => navigator.serviceWorker.register('sw-classic.js'))
-    .catch(() => null)
-  : Promise.resolve(null);
+    .catch(() => {});
+}
 
 /** Chiede al browser di sincronizzare la coda appena torna la rete, anche ad app chiusa (Chrome/Android). */
 async function requestBackgroundSync() {

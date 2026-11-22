@@ -1,5 +1,5 @@
 import { html, raw, table, field, input, select, $, $$, toast, bindSearch, confirmDialog, formDialog, openModal, openPdf } from '../ui.js';
-import { byId, planBatch, scaleRecipe, batchPickedByMaterial, allocateFefo, inciList, traceBackward, traceBatchForward } from '../domain.js';
+import { byId, planBatch, scaleRecipe, batchPickedByMaterial, allocateFefo, traceBatchForward } from '../domain.js';
 import { today, fmtDate, fmtQty, fmtNum, fmtDateTime, num, round, uid, sortBy, addMonths } from '../util.js';
 import { qrSvg, batchPayload } from '../qr.js';
 import { batchRecordPdf, productLabelPdf } from '../pdf.js';

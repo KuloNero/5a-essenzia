@@ -194,9 +194,8 @@ export class Store {
     if (this.backend.kind !== 'github' || this.status === 'syncing') return;
     try {
       const h = await this.backend.headSha({ useEtag: true });
-      if (h.unchanged) { if (this.status === 'offline' && !this.pending.length) this.setStatus('ok'); return; }
-      if (h.sha && h.sha !== this.head) await this.sync();
-      else if (this.pending.length) await this.sync();
+      // con operazioni in coda si sincronizza sempre, anche se il branch non è cambiato (304)
+      if (this.pending.length || (h.sha && h.sha !== this.head)) await this.sync();
       else if (this.status !== 'ok') this.setStatus('ok');
     } catch (e) {
       if (e.network) this.setStatus('offline', e);

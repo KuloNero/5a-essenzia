@@ -1,7 +1,7 @@
-import { html, raw, table, field, input, select, $, $$, toast, bindSearch, formDialog, confirmDialog, readForm } from '../ui.js';
-import { byId, materialStock, fefoLots, recipeItems } from '../domain.js';
+import { html, raw, table, field, input, select, $, $$, bindSearch, formDialog, confirmDialog, readForm } from '../ui.js';
+import { byId, materialStock, recipeItems } from '../domain.js';
 import { ALLERGENS } from '../allergens.js';
-import { today, fmtDate, fmtQty, fmtEur, num, sortBy, esc, uid } from '../util.js';
+import { fmtDate, fmtQty, fmtEur, num, sortBy, esc, uid } from '../util.js';
 import { pageHead, lotBadge, docsSection, bindDocs } from './common.js';
 
 export function materials(el, { app, query }) {

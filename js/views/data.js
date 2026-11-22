@@ -1,4 +1,4 @@
-import { html, raw, table, field, input, select, $, toast, confirmDialog, downloadBlob, pickFile, openModal } from '../ui.js';
+import { html, table, field, input, select, $, toast, confirmDialog, downloadBlob, pickFile, openModal } from '../ui.js';
 import { IMPORT_SCHEMAS, validateImport, readTable, templateRows, writeXLSX, toCSV, inventoryRows, stockSummaryRows, movementRows, consumptionRows, makeBackup, readBackup } from '../io.js';
 import { COLLECTIONS } from '../domain.js';
 import { uid, today, addDays, fmtDateTime } from '../util.js';

@@ -4,7 +4,7 @@
 //    se un altro dispositivo ha scritto nel frattempo, l'aggiornamento fallisce (conflitto) e lo
 //    store ricarica i dati e ri-applica l'azione. Lo storico dei commit è anche l'audit trail.
 //  - LocalBackend: modalità prova/offline-only, dati solo nel browser (IndexedDB).
-import { b64ToUtf8, utf8ToB64 } from './util.js';
+import { b64ToUtf8, utf8ToB64, b64ToBytes } from './util.js';
 import { COLLECTIONS } from './domain.js';
 import { kv } from './idb.js';
 
@@ -190,9 +190,7 @@ export class LocalBackend {
   async readFile(path) {
     const b64 = await kv.get('local:file:' + path);
     if (!b64) throw new Error('File non trovato');
-    const bin = atob(b64); const u = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
-    return new Blob([u]);
+    return new Blob([b64ToBytes(b64)]);
   }
   async testAccess() { return { local: true }; }
 }

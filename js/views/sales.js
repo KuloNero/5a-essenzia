@@ -1,7 +1,7 @@
 import { html, raw, table, field, input, select, $, $$, toast, bindSearch, confirmDialog, formDialog } from '../ui.js';
 import { byId, recipeCost, priceAnalysis, priceForMargin } from '../domain.js';
 import { today, fmtDate, fmtEur, fmtNum, num, round, uid, sortBy, esc } from '../util.js';
-import { pageHead, batchBadge } from './common.js';
+import { pageHead } from './common.js';
 
 // ---------------- Clienti ----------------
 export function customers(el, { app }) {

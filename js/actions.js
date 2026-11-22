@@ -2,7 +2,7 @@
 // {type, payload, meta}: così può essere ri-applicata su dati più recenti in caso di
 // modifica concorrente da un altro dispositivo (merge automatico) o accodata offline.
 import {
-  DomainError, byId, checkWithdraw, fefoLots, nextLotCode, materialKind, normalizeDb,
+  DomainError, byId, checkWithdraw, nextLotCode, materialKind, normalizeDb,
   shelfLifeExpiry, allocateFefo, COLLECTIONS,
 } from './domain.js';
 import { round, isoDate, uid, clone } from './util.js';
@@ -50,7 +50,7 @@ function doWithdraw(db, meta, { lotId, qty, batchId, note, overrideFefo, reason,
   }
   const mv = movement(db, meta, {
     id: `${meta.id}-${lot.id}`,
-    type: kind === 'packaging' ? 'scarico' : 'scarico',
+    type: 'scarico',
     itemKind: materialKind(m),
     materialId: lot.materialId,
     lotId: lot.id,
@@ -418,4 +418,3 @@ export function describeAction(action, db) {
   return `${LABELS[action.type] || action.type}${detail ? ': ' + detail : ''}${who ? ` [${who}]` : ''}`;
 }
 
-export { fefoLots };

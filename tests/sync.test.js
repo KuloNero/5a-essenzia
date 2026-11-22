@@ -81,3 +81,19 @@ test('polling ETag: rileva i commit di altri dispositivi', async () => {
   assert.equal(notified, 1);
   assert.equal(b.db.customers[0].name, 'Negozio Verde');
 });
+
+test('polling: la coda viene svuotata anche se nessun altro dispositivo ha scritto', async () => {
+  const gh = createFakeGitHub({ empty: false });
+  const phone = device(gh, 'phone3');
+  await phone.init();
+  await phone.dispatch('material.upsert', { material: { id: 'm1', name: 'Olio' } });
+  await phone.dispatch('lot.receive', { lot: { id: 'l1', materialId: 'm1', qty: 100 } });
+  await phone.poll(); // memorizza l'ETag del branch
+  const real = phone.backend.fetch;
+  phone.backend.fetch = async () => { throw new TypeError('Failed to fetch'); }; // errore di rete momentaneo
+  assert.equal((await phone.dispatch('stock.withdraw', { lotId: 'l1', qty: 10 })).queued, true);
+  phone.backend.fetch = real;
+  await phone.poll(); // GitHub risponde 304 (nessun commit nuovo)
+  assert.equal(phone.pending.length, 0);
+  assert.ok(gh.headFiles()['data/lots.json'].includes('"qty":90'));
+});

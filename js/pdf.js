@@ -1,6 +1,6 @@
 // Generazione PDF: etichette QR (rotolo o foglio A4) e Batch Record.
 import { drawQrPdf, batchPayload } from './qr.js';
-import { fmtDate, fmtNum, fmtQty, isoDate } from './util.js';
+import { fmtDate, fmtNum, isoDate } from './util.js';
 import { byId, planBatch, inciList } from './domain.js';
 
 function jsPDF() {
@@ -243,4 +243,3 @@ export function productLabelPdf(db, recipe, batch, size = { w: 100, h: 70 }) {
   return doc;
 }
 
-export function qtyLine(q, u) { return fmtQty(q, u); }

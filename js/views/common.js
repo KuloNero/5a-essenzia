@@ -1,5 +1,5 @@
 import { html, raw, openModal, formDialog, toast, $, field, input, select, LOT_STATE, BATCH_STATE, badge, openPdf, confirmDialog, pickFile, readFileAs } from '../ui.js';
-import { byId, lotState, checkWithdraw, fefoLots, DomainError } from '../domain.js';
+import { byId, lotState, checkWithdraw, fefoLots } from '../domain.js';
 import { fmtDate, fmtQty, today, fmtNum, uid, safeFileName, bytesToB64, fmtDateTime } from '../util.js';
 import { lotPayload, batchPayload, qrSvg } from '../qr.js';
 import { labelsPdf } from '../pdf.js';
@@ -216,4 +216,3 @@ export function materialOptions(db, category) {
     .map(m => [m.id, `${m.name}${m.code ? ` (${m.code})` : ''}`]);
 }
 
-export { DomainError };

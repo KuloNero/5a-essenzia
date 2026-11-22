@@ -1,4 +1,4 @@
-import { html, raw, field, input, select, $, toast, confirmDialog, openModal, readForm } from '../ui.js';
+import { html, raw, field, input, $, toast, confirmDialog, openModal, readForm } from '../ui.js';
 import { loadConfig, saveConfig, clearConfig } from '../store.js';
 import { GitHubBackend } from '../backends.js';
 import { qrSvg } from '../qr.js';

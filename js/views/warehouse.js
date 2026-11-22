@@ -1,5 +1,5 @@
-import { html, raw, table, field, input, select, $, $$, toast, bindSearch, openModal, formDialog } from '../ui.js';
-import { byId, lotState, materialStock, findByCode, fefoLots, batchPickedByMaterial, recipeItems, scaleRecipe } from '../domain.js';
+import { html, raw, table, field, input, select, $, toast, bindSearch, openModal, formDialog } from '../ui.js';
+import { byId, lotState, materialStock, findByCode, fefoLots, batchPickedByMaterial, scaleRecipe } from '../domain.js';
 import { today, fmtDate, fmtQty, fmtDateTime, fmtEur, uid, round, num, sortBy } from '../util.js';
 import { decodePayload, qrSvg, lotPayload } from '../qr.js';
 import { startScanner } from '../scanner.js';

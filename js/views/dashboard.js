@@ -1,4 +1,4 @@
-import { html, raw, table } from '../ui.js';
+import { html, table } from '../ui.js';
 import { lowStock, expiringLots, byId, materialStock } from '../domain.js';
 import { today, fmtDate, fmtQty, fmtDateTime, fmtEur } from '../util.js';
 import { activeBatches, batchBadge, matName, pageHead } from './common.js';

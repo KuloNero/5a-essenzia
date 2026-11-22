@@ -1,4 +1,4 @@
-import { html, raw, table, $, downloadBlob, openModal } from '../ui.js';
+import { html, table, $, downloadBlob } from '../ui.js';
 import { byId, traceForward, traceBackward, traceBatchForward, findByCode } from '../domain.js';
 import { fmtDate, fmtQty, normKey } from '../util.js';
 import { toCSV } from '../io.js';
