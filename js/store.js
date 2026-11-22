@@ -10,7 +10,15 @@ const CFG_KEY = 'esz:config';
 export function loadConfig() {
   try { return JSON.parse(localStorage.getItem(CFG_KEY)) || null; } catch { return null; }
 }
-export function saveConfig(cfg) { localStorage.setItem(CFG_KEY, JSON.stringify(cfg)); }
+export function saveConfig(cfg) {
+  localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
+  // copia in IndexedDB: il service worker (che non vede localStorage) la usa per la sincronizzazione in background
+  return kv.set('config', cfg).catch(() => {});
+}
+export function clearConfig() {
+  localStorage.removeItem(CFG_KEY);
+  return kv.del('config').catch(() => {});
+}
 
 export function serializeCollection(name, value) {
   if (Array.isArray(value)) {
@@ -172,6 +180,7 @@ export class Store {
       this.pending.push(action);
       this.recompute();
       await this.saveCache();
+      if (this.onQueued) { try { this.onQueued(); } catch { /* */ } }
       this.setStatus('offline');
       this.emit('data');
       return { queued: true, action };

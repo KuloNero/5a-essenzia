@@ -1,5 +1,5 @@
 import { html, raw, field, input, select, $, toast, confirmDialog, openModal, readForm } from '../ui.js';
-import { loadConfig, saveConfig } from '../store.js';
+import { loadConfig, saveConfig, clearConfig } from '../store.js';
 import { GitHubBackend } from '../backends.js';
 import { qrSvg } from '../qr.js';
 import { startScanner } from '../scanner.js';
@@ -56,13 +56,13 @@ export function renderSetup(el, { onDone }) {
       const be = new GitHubBackend(c);
       const info = await be.testAccess();
       if (!info.private && !await confirmDialog('Il repository è PUBBLICO: formule, costi e clienti sarebbero visibili a chiunque. Continuare comunque?', { danger: true, okLabel: 'Continua' })) return;
-      saveConfig({ mode: 'github', ...c });
+      await saveConfig({ mode: 'github', ...c });
       toast('Collegato a ' + info.fullName, 'ok');
       onDone();
     } catch (err) { toast(err.message, 'error', 8000); }
     finally { btn.disabled = false; }
   });
-  $('#local', el).onclick = () => { saveConfig({ mode: 'local', user: form.user.value, device: form.device.value || guessDevice() }); onDone(); };
+  $('#local', el).onclick = async () => { await saveConfig({ mode: 'local', user: form.user.value, device: form.device.value || guessDevice() }); onDone(); };
   $('#scanCfg', el).onclick = async () => {
     scanner?.stop();
     scanner = await startScanner($('#cam', el), text => {
@@ -162,7 +162,7 @@ export function settings(el, { app }) {
         label: 'Verifica e salva', primary: true, onClick: async (wrap) => {
           const c = readForm($('#rc', wrap));
           await new GitHubBackend(c).testAccess();
-          saveConfig({ mode: 'github', ...c });
+          await saveConfig({ mode: 'github', ...c });
           location.reload();
         },
       }],
@@ -172,7 +172,7 @@ export function settings(el, { app }) {
   $('#logout', el).onclick = async () => {
     if (app.store.pending.length && !await confirmDialog(`Ci sono ${app.store.pending.length} operazioni non ancora sincronizzate che andranno perse.`, { danger: true, okLabel: 'Disconnetti comunque' })) return;
     if (!await confirmDialog('Rimuovere configurazione e token da questo dispositivo? I dati su GitHub non vengono toccati.', { danger: true, okLabel: 'Disconnetti' })) return;
-    localStorage.removeItem('esz:config');
+    await clearConfig();
     await kv.del(app.store.cacheKey);
     location.hash = '#/';
     location.reload();

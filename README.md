@@ -37,6 +37,7 @@ I dati vengono salvati come file JSON in un **repository GitHub** (consigliato p
 - Report XLSX/CSV: inventario lotti, giacenze, movimenti, consumi.
 - Backup compresso (.zip, con o senza documenti) e ripristino. Lo storico Git è un ulteriore backup.
 - Funziona anche offline: le operazioni vengono accodate e sincronizzate al ritorno della rete.
+- **Sincronizzazione in background** (Chrome/Edge su Android e desktop): quando torna la rete la coda viene caricata dal service worker anche se l'app è chiusa. Su iPhone/Safari e Firefox questa API non esiste: la coda parte alla successiva apertura dell'app.
 
 ## Come funziona la sincronizzazione
 
@@ -78,7 +79,8 @@ Per provare senza GitHub: *Usa in modalità locale* e poi *Impostazioni → Cari
 ## Struttura
 
 ```
-index.html, sw.js, manifest.webmanifest   PWA
+index.html, manifest.webmanifest          PWA
+sw.js / sw-shell.js / sw-classic.js       service worker: cache offline + sync in background (js/bgsync.js)
 css/app.css                               stile (chiaro/scuro, mobile-first)
 js/domain.js                              logica pura: formule, INCI/allergeni, FEFO, costi, tracciabilità
 js/actions.js                             tutte le modifiche ai dati (reducer di azioni serializzabili)
@@ -99,4 +101,4 @@ npm test          # test di dominio, sincronizzazione e concorrenza
 npm run serve     # http://localhost:8080
 ```
 
-Nessuna dipendenza da installare né build. Quando modifichi i file dell'app, aggiorna `VERSION` in `sw.js` (e la lista `SHELL` se aggiungi file).
+Nessuna dipendenza da installare né build. Quando modifichi i file dell'app, aggiorna `VERSION` in `sw-shell.js` (e la lista `SHELL` se aggiungi file).

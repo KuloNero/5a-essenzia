@@ -151,6 +151,8 @@ async function boot() {
     return;
   }
   app.store = new Store(cfg);
+  saveConfig(cfg); // copia la configurazione in IndexedDB per il service worker (installazioni precedenti)
+  app.store.onQueued = requestBackgroundSync;
   app.store.subscribe(reason => {
     if (reason === 'status') renderSync();
     if (reason === 'data' || reason === 'remote') { renderSync(); app.onData(reason === 'remote'); }
@@ -166,6 +168,8 @@ async function boot() {
   renderSync();
   app.render();
   await app.store.init();
+  if (app.store.pending.length) requestBackgroundSync();
+  if (cfg.mode === 'github') setupPeriodicSync();
   if (app.store.status === 'error') toast(app.store.lastError?.message || 'Errore di sincronizzazione', 'error', 8000);
   app.render();
   const poll = () => { if (document.visibilityState === 'visible') app.store.poll(); };
@@ -175,8 +179,36 @@ async function boot() {
   window.addEventListener('offline', () => app.store.setStatus('offline'));
 }
 
-if ('serviceWorker' in navigator && location.protocol !== 'file:') {
-  navigator.serviceWorker.register('sw.js').catch(() => {});
+// Service worker: "module" (con sync in background) e fallback classico per i browser che non lo supportano
+const swReady = ('serviceWorker' in navigator && location.protocol !== 'file:')
+  ? navigator.serviceWorker.register('sw.js', { type: 'module' })
+    .catch(() => navigator.serviceWorker.register('sw-classic.js'))
+    .catch(() => null)
+  : Promise.resolve(null);
+
+/** Chiede al browser di sincronizzare la coda appena torna la rete, anche ad app chiusa (Chrome/Android). */
+async function requestBackgroundSync() {
+  try {
+    const reg = await navigator.serviceWorker?.ready;
+    if (reg?.sync) await reg.sync.register('esz-sync');
+  } catch { /* non supportato (es. iOS/Safari, Firefox): si sincronizza alla riapertura */ }
+}
+
+async function setupPeriodicSync() {
+  try {
+    const reg = await navigator.serviceWorker?.ready;
+    if (!reg?.periodicSync) return;
+    const st = await navigator.permissions.query({ name: 'periodic-background-sync' });
+    if (st.state === 'granted') await reg.periodicSync.register('esz-periodic', { minInterval: 60 * 60 * 1000 });
+  } catch { /* opzionale */ }
+}
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('message', async e => {
+    if (e.data?.type !== 'esz-sync' || !app.store) return;
+    await app.store.sync();
+    e.ports?.[0]?.postMessage({ pending: app.store.pending.length, failed: app.store.failed.length });
+  });
 }
 
 window.__app = app;

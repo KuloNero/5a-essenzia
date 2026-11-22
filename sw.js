@@ -1,68 +1,28 @@
-// Service worker: app shell disponibile offline. Le chiamate a api.github.com non vengono mai messe in cache.
-const VERSION = 'esz-v1.0.0';
-const SHELL = [
-    './',
-    'index.html',
-    'manifest.webmanifest',
-    'css/app.css',
-    'icons/icon.svg',
-    'icons/icon-192.png',
-    'icons/icon-512.png',
-    'js/actions.js',
-    'js/allergens.js',
-    'js/app.js',
-    'js/backends.js',
-    'js/demo.js',
-    'js/domain.js',
-    'js/idb.js',
-    'js/io.js',
-    'js/pdf.js',
-    'js/qr.js',
-    'js/scanner.js',
-    'js/store.js',
-    'js/ui.js',
-    'js/util.js',
-    'js/views/common.js',
-    'js/views/dashboard.js',
-    'js/views/data.js',
-    'js/views/index.js',
-    'js/views/labels.js',
-    'js/views/materials.js',
-    'js/views/production.js',
-    'js/views/recipes.js',
-    'js/views/sales.js',
-    'js/views/settings.js',
-    'js/views/trace.js',
-    'js/views/warehouse.js',
-    'vendor/jsQR.js',
-    'vendor/jspdf.plugin.autotable.min.js',
-    'vendor/jspdf.umd.min.js',
-    'vendor/jszip.min.js',
-    'vendor/qrcode.js',
-];
+// Service worker principale (module): app shell offline + sincronizzazione in background.
+// Se il browser non supporta i service worker "module", l'app registra sw-classic.js (solo shell).
+import './sw-shell.js';
+import { backgroundSync } from './js/bgsync.js';
 
-self.addEventListener('install', e => {
-  e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL.map(u => new Request(u, { cache: 'reload' })))).then(() => self.skipWaiting()));
-});
+async function askOpenPage(clients) {
+  // se l'app è aperta lasciamo sincronizzare la pagina (evita scritture concorrenti sulla coda)
+  const acks = clients.map(c => new Promise(resolve => {
+    const ch = new MessageChannel();
+    ch.port1.onmessage = e => resolve(e.data);
+    c.postMessage({ type: 'esz-sync' }, [ch.port2]);
+  }));
+  const timeout = new Promise(resolve => setTimeout(() => resolve(null), 25000));
+  return Promise.race([Promise.any(acks).catch(() => null), timeout]);
+}
 
-self.addEventListener('activate', e => {
-  e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== VERSION).map(k => caches.delete(k)))).then(() => self.clients.claim()));
-});
+async function run() {
+  const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+  let res = clients.length ? await askOpenPage(clients) : null;
+  // nessuna pagina aperta o pagina sospesa (app in background): sincronizza il service worker.
+  // Le operazioni sono idempotenti, quindi un eventuale doppio invio non duplica nulla.
+  if (!res) res = await backgroundSync();
+  // lanciare un errore chiede al browser di riprovare più tardi
+  if (res.pending > 0) throw new Error(`Ancora ${res.pending} operazioni in coda`);
+}
 
-// network-first per i file dell'app (aggiornamenti immediati quando online), cache come fallback offline
-self.addEventListener('fetch', e => {
-  const url = new URL(e.request.url);
-  if (e.request.method !== 'GET' || url.origin !== self.location.origin) return;
-  e.respondWith((async () => {
-    try {
-      const res = await fetch(e.request);
-      if (res.ok) { const c = await caches.open(VERSION); c.put(e.request, res.clone()); }
-      return res;
-    } catch {
-      const cached = await caches.match(e.request, { ignoreSearch: true });
-      if (cached) return cached;
-      if (e.request.mode === 'navigate') return caches.match('index.html');
-      throw new Error('offline');
-    }
-  })());
-});
+self.addEventListener('sync', e => { if (e.tag === 'esz-sync') e.waitUntil(run()); });
+self.addEventListener('periodicsync', e => { if (e.tag === 'esz-periodic') e.waitUntil(run().catch(() => {})); });
