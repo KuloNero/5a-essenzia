@@ -1,6 +1,6 @@
 // App shell offline (script compatibile sia come classic sia come module). Le chiamate a api.github.com non vengono mai messe in cache.
 // tenere allineato con APP_VERSION in js/version.js (il workflow aggiunge il commit)
-const VERSION = 'esz-v1.3.0';
+const VERSION = 'esz-v1.3.1';
 const SHELL = [
     './',
     'index.html',

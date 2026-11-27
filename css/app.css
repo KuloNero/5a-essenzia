@@ -42,6 +42,7 @@ p { margin: .4rem 0; }
 .nowrap { white-space: nowrap; }
 .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .92em; }
 .small { font-size: .85rem; }
+abbr[title] { text-decoration: underline dotted; text-underline-offset: 2px; cursor: help; }
 hr { border: 0; border-top: 1px solid var(--border); margin: 1rem 0; }
 
 /* ---- layout ---- */

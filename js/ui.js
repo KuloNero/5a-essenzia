@@ -212,3 +212,69 @@ export function bindSearch(root, inputSel, rowSel) {
     for (const r of $$(rowSel, root)) r.hidden = q && !r.textContent.toLowerCase().includes(q);
   });
 }
+
+// Spiegazione degli acronimi al passaggio del mouse (<abbr title>), applicata a tutto ciò che viene mostrato.
+const ACRONYMS = {
+  INCI: 'International Nomenclature of Cosmetic Ingredients – denominazione internazionale degli ingredienti cosmetici',
+  CAS: 'Chemical Abstracts Service – numero di registro della sostanza chimica',
+  EINECS: 'European Inventory of Existing Commercial Chemical Substances – inventario europeo delle sostanze',
+  CE: 'Comunità Europea (nel numero CE: identificativo europeo della sostanza)',
+  FEFO: 'First Expired, First Out – si usa per primo il lotto che scade prima',
+  PAO: 'Period After Opening – mesi di utilizzo dopo l\'apertura',
+  QC: 'Quality Control – controllo qualità',
+  TDS: 'Technical Data Sheet – scheda tecnica',
+  SDS: 'Safety Data Sheet – scheda di sicurezza',
+  MSDS: 'Material Safety Data Sheet – scheda di sicurezza',
+  CoA: 'Certificate of Analysis – certificato di analisi del lotto',
+  PIF: 'Product Information File – fascicolo informativo del prodotto (Reg. 1223/2009, art. 11)',
+  GMP: 'Good Manufacturing Practice – norme di buona fabbricazione (ISO 22716)',
+  IFRA: 'International Fragrance Association – standard di sicurezza per le fragranze',
+  COSMOS: 'Standard europeo per la certificazione dei cosmetici biologici e naturali',
+  CPNP: 'Cosmetic Products Notification Portal – portale UE di notifica dei cosmetici',
+  B2B: 'Business to Business – vendita a rivenditori e aziende (prezzi IVA esclusa)',
+  B2C: 'Business to Consumer – vendita al consumatore finale (prezzi IVA inclusa)',
+  IVA: 'Imposta sul Valore Aggiunto',
+  CF: 'Codice Fiscale',
+  DDT: 'Documento di Trasporto',
+  MP: 'Materia Prima',
+  PK: 'Packaging – materiale di confezionamento',
+  PF: 'Prodotto Finito',
+  UM: 'Unità di Misura',
+  QR: 'Quick Response – codice a barre bidimensionale',
+  CSV: 'Comma-Separated Values – tabella in testo semplice, apribile con Excel',
+  XLSX: 'File Excel',
+  PWA: 'Progressive Web App – sito installabile come un\'app',
+};
+const ACR_SRC = `\\b(${Object.keys(ACRONYMS).join('|')})\\b`;
+const ACR_RE = new RegExp(ACR_SRC, 'g');
+const ACR_TEST = new RegExp(ACR_SRC); // senza 'g': test() non deve ricordare lastIndex tra un nodo e l'altro
+const SKIP = new Set(['ABBR', 'SCRIPT', 'STYLE', 'TEXTAREA', 'OPTION', 'SELECT', 'INPUT', 'TITLE']);
+
+export function abbreviate(root) {
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    // niente tooltip dentro codici (lotti, articoli) e campi di inserimento
+    acceptNode: n => (SKIP.has(n.parentNode.nodeName) || n.parentNode.closest('.mono, abbr, [contenteditable]') || !ACR_TEST.test(n.data))
+      ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT,
+  });
+  const nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+  for (const n of nodes) {
+    const frag = document.createDocumentFragment();
+    let last = 0;
+    n.data.replace(ACR_RE, (m, _k, i) => {
+      frag.append(n.data.slice(last, i));
+      const a = document.createElement('abbr');
+      a.title = ACRONYMS[m];
+      a.textContent = m;
+      frag.append(a);
+      last = i + m.length;
+    });
+    frag.append(n.data.slice(last));
+    n.replaceWith(frag);
+  }
+}
+
+export function autoAbbreviate(...roots) {
+  const obs = new MutationObserver(() => roots.forEach(abbreviate));
+  for (const r of roots) { abbreviate(r); obs.observe(r, { childList: true, subtree: true }); }
+}

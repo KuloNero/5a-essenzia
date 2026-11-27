@@ -1,5 +1,5 @@
 import { Store, loadConfig, saveConfig } from './store.js';
-import { $, $$, html, toast, modalOpen, openModal } from './ui.js';
+import { $, $$, html, toast, modalOpen, openModal, autoAbbreviate } from './ui.js';
 import { fmtDateTime } from './util.js';
 import { describeAction } from './actions.js';
 import { versionLabel } from './version.js';
@@ -146,6 +146,7 @@ function syncDetails() {
 
 async function boot() {
   renderNav();
+  autoAbbreviate($('#view'), $('#modals'), $('#sidebar'));
   const cfg = loadConfig();
   if (!cfg) {
     $('#app').classList.add('setup-mode');
