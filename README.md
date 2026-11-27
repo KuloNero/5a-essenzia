@@ -36,7 +36,7 @@ I dati vengono salvati come file JSON in un **repository GitHub** (consigliato p
 - Import CSV/XLSX di materie prime, fornitori, clienti e listini, con anteprima di errori e duplicati e modelli scaricabili.
 - Report XLSX/CSV: inventario lotti, giacenze, movimenti, consumi.
 - Backup compresso (.zip, con o senza documenti) e ripristino. Lo storico Git è un ulteriore backup.
-- Funziona anche offline: le operazioni vengono accodate e sincronizzate al ritorno della rete.
+- Funziona anche offline: ogni dispositivo tiene una **copia locale completa** (dati e documenti allegati, scaricati in background a ogni sincronizzazione); le operazioni, compresi gli allegati caricati, vengono accodate e sincronizzate al ritorno della rete.
 - **Sincronizzazione in background** (Chrome/Edge su Android e desktop): quando torna la rete la coda viene caricata dal service worker anche se l'app è chiusa. Su iPhone/Safari e Firefox questa API non esiste: la coda parte alla successiva apertura dell'app.
 
 ## Come funziona la sincronizzazione

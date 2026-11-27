@@ -97,3 +97,29 @@ test('polling: la coda viene svuotata anche se nessun altro dispositivo ha scrit
   assert.equal(phone.pending.length, 0);
   assert.ok(gh.headFiles()['data/lots.json'].includes('"qty":90'));
 });
+
+test('copia locale completa: allegati leggibili e caricabili offline', async () => {
+  const gh = createFakeGitHub({ empty: false });
+  const pc = device(gh, 'pc4'), phone = device(gh, 'phone4');
+  await pc.init();
+  const b64 = Buffer.from('CoA lotto 123').toString('base64');
+  await pc.dispatch('doc.add', { doc: { id: 'd1', path: 'docs/a.txt', name: 'a.txt' } }, { files: [{ path: 'docs/a.txt', base64: b64 }] });
+  assert.equal(gh.headFiles()['data/docs/a.txt'], 'CoA lotto 123');
+
+  // l'altro dispositivo scarica la copia locale durante la sincronizzazione
+  await phone.init();
+  await phone.prefetchDocs();
+  const real = phone.backend.fetch;
+  phone.backend.fetch = async () => { throw new TypeError('Failed to fetch'); };
+  assert.equal(await (await phone.readFile('docs/a.txt')).text(), 'CoA lotto 123');
+
+  // caricamento offline: accodato, apribile subito, inviato al ritorno della rete
+  const r = await phone.dispatch('doc.add', { doc: { id: 'd2', path: 'docs/b.txt', name: 'b.txt' } }, { files: [{ path: 'docs/b.txt', base64: Buffer.from('SDS').toString('base64') }] });
+  assert.equal(r.queued, true);
+  assert.equal(await (await phone.readFile('docs/b.txt')).text(), 'SDS');
+  phone.backend.fetch = real;
+  await phone.sync();
+  assert.equal(phone.pending.length, 0);
+  assert.equal(gh.headFiles()['data/docs/b.txt'], 'SDS');
+  assert.ok(gh.headFiles()['data/documents.json'].includes('"d2"'));
+});

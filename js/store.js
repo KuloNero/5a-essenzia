@@ -1,8 +1,8 @@
 // Store centrale: stato dati, sincronizzazione con il backend, coda offline.
 import { applyAction, makeAction, describeAction } from './actions.js';
-import { normalizeDb, emptyDb, DomainError } from './domain.js';
+import { normalizeDb, emptyDb } from './domain.js';
 import { GitHubBackend, LocalBackend } from './backends.js';
-import { clone } from './util.js';
+import { clone, b64ToBytes, bytesToB64 } from './util.js';
 import { kv } from './idb.js';
 
 const CFG_KEY = 'esz:config';
@@ -88,6 +88,7 @@ export class Store {
       await this._reload();
       await this._flush();
       this.setStatus(this.pending.length ? 'offline' : 'ok');
+      this.prefetchDocs(); // in background: copia locale degli allegati per l'uso offline
     } catch (e) {
       this.setStatus(e.network ? 'offline' : 'error', e);
     }
@@ -109,7 +110,7 @@ export class Store {
     while (this.pending.length) {
       const a = this.pending[0];
       try {
-        await this._commitAction(a, []);
+        await this._commitAction(a, await this.queuedFiles(a));
         this.pending.shift();
       } catch (e) {
         if (e.network) throw e;
@@ -154,7 +155,7 @@ export class Store {
 
   /**
    * Esegue un'azione. Online: commit immediato. Offline: valida localmente e accoda.
-   * opts.files: file binari da salvare nello stesso commit (richiedono connessione).
+   * opts.files: file binari da salvare nello stesso commit (copiati anche in locale, accodati se offline).
    */
   dispatch(type, payload, opts = {}) {
     const action = makeAction(type, payload, this.ctx);
@@ -162,6 +163,7 @@ export class Store {
       // validazione preliminare sui dati attuali (errori immediati anche offline)
       const probe = normalizeDb(clone(this.db));
       applyAction(probe, action);
+      await this.keepFiles(opts.files || []);
       const offline = typeof navigator !== 'undefined' && navigator.onLine === false && this.backend.kind === 'github';
       if (!offline && !this.pending.length) {
         try {
@@ -176,7 +178,8 @@ export class Store {
           if (!e.network) { this.setStatus(this.pending.length ? 'offline' : 'ok'); throw e; }
         }
       }
-      if (opts.files?.length) throw new DomainError('Il caricamento di documenti richiede la connessione');
+      // in coda solo il riferimento: il contenuto è già nella copia locale
+      if (opts.files?.length) action.files = opts.files.map(f => (f.delete ? f : { path: f.path, local: true }));
       this.pending.push(action);
       this.recompute();
       await this.saveCache();
@@ -202,5 +205,44 @@ export class Store {
     }
   }
 
-  readFile(path) { return this.backend.readFile(path); }
+  fileKey(path) { return `${this.cacheKey}:file:${path}`; }
+
+  /** Copia locale dei file allegati (nella modalità locale i file sono già nel backend). */
+  async keepFiles(files) {
+    if (this.backend.kind === 'local') return;
+    for (const f of files) {
+      if (f.delete) await kv.del(this.fileKey(f.path));
+      else if (f.base64 !== undefined) await kv.set(this.fileKey(f.path), b64ToBytes(f.base64));
+    }
+  }
+
+  async queuedFiles(action) {
+    const out = [];
+    for (const f of action.files || []) {
+      if (!f.local) { out.push(f); continue; }
+      const bytes = await kv.get(this.fileKey(f.path));
+      if (!bytes) throw new Error(`Copia locale del file ${f.path} non trovata`);
+      out.push({ path: f.path, base64: bytesToB64(bytes) });
+    }
+    return out;
+  }
+
+  /** Legge un allegato: prima dalla copia locale (i file non cambiano mai: il percorso contiene un id univoco). */
+  async readFile(path) {
+    if (this.backend.kind === 'local') return this.backend.readFile(path);
+    const local = await kv.get(this.fileKey(path));
+    if (local) return new Blob([local]);
+    const blob = await this.backend.readFile(path);
+    await kv.set(this.fileKey(path), new Uint8Array(await blob.arrayBuffer()));
+    return blob;
+  }
+
+  /** Scarica in locale gli allegati mancanti. shortcut: gli allegati eliminati da altri dispositivi restano in locale, ripulire se lo spazio diventa un problema. */
+  prefetchDocs() {
+    if (this.backend.kind === 'local') return Promise.resolve();
+    this.prefetching ||= (async () => {
+      for (const d of this.db.documents) await this.readFile(d.path).catch(() => {});
+    })().finally(() => { this.prefetching = null; });
+    return this.prefetching;
+  }
 }

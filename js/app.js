@@ -154,6 +154,7 @@ async function boot() {
     return;
   }
   app.store = new Store(cfg);
+  navigator.storage?.persist?.().catch(() => {}); // chiede al browser di non cancellare la copia locale
   saveConfig(cfg); // copia la configurazione in IndexedDB per il service worker (installazioni precedenti)
   app.store.onQueued = requestBackgroundSync;
   app.store.subscribe(reason => {

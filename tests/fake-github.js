@@ -58,7 +58,7 @@ export function createFakeGitHub({ empty = true } = {}) {
     status, ok: status >= 200 && status < 300,
     headers: { get: k => headers[k.toLowerCase()] ?? null },
     json: async () => body,
-    blob: async () => body,
+    blob: async () => new Blob([body]),
   });
 
   async function fetch(url, opts = {}) {

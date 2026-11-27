@@ -1,5 +1,5 @@
 // Versione dell'app. BUILD e BUILD_DATE vengono compilati dal workflow di pubblicazione (GitHub Pages).
-export const APP_VERSION = '1.2.1';
+export const APP_VERSION = '1.3.0';
 export const BUILD = '__BUILD__';
 export const BUILD_DATE = '__BUILD_DATE__';
 
